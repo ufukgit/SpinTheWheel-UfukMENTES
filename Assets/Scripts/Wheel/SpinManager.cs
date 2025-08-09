@@ -11,7 +11,7 @@ public class SpinManager : MonoBehaviour
     [SerializeField] WheelRewards _rewards;
 
     [Header("Wheel Settings")]
-    [SerializeField] float _spinSpeed = 600f;  
+    [SerializeField] float _spinSpeed = 600f;
     [SerializeField] int _segmentCount = 8;
     [SerializeField] float _offsetDeg = 0f;
     [Range(0f, 1f)][SerializeField] float _landingBias = 0.5f;
@@ -21,8 +21,8 @@ public class SpinManager : MonoBehaviour
     [SerializeField] float _baseDuration = 12f;
     [SerializeField] float _durationJitter = 1.0f;
 
-    [SerializeField] MonoBehaviour _randomProviderBehaviour; 
-    [SerializeField] MonoBehaviour _wheelAnimatorBehaviour; 
+    [SerializeField] MonoBehaviour _randomProviderBehaviour;
+    [SerializeField] MonoBehaviour _wheelAnimatorBehaviour;
 
     IRandomIndexProvider _random;
     IWheelAnimator _anim;
@@ -41,22 +41,56 @@ public class SpinManager : MonoBehaviour
         _rewardApplier = new FirebaseRewardApplier();
     }
 
-    void Start() => _spinButton.onClick.AddListener(OnSpinButton);
-    void OnDestroy() => _spinButton.onClick.RemoveListener(OnSpinButton);
+    void Start()
+    {
+        _spinButton.onClick.AddListener(OnSpinButton);
+    }
+
+    void OnDestroy()
+    {
+        _spinButton.onClick.RemoveListener(OnSpinButton);
+    }
 
     void OnSpinButton()
     {
         if (_isSpinning) return;
+        StartCoroutine(OnSpinButtonRoutine());
+    }
 
+    IEnumerator OnSpinButtonRoutine()
+    {
         if (FirebaseServices.Instance && !FirebaseServices.Instance.OnlineMode)
         {
             Debug.LogWarning("When you are not online, the spin result will not be written to the server.");
         }
 
+        if (FirebaseServices.Instance && FirebaseServices.Instance.OnlineMode)
+        {
+            var uid = FirebaseServices.Instance.UserId;
+            var getTask = FirebaseServices.Instance.WalletRepo.GetAsync(uid);
+
+            yield return CoroutineTasks.Wait(getTask);
+
+            var data = getTask.Result;
+            if (data != null)
+            {
+                var now = DateTime.UtcNow;
+                var end = data.CooldownEndTime.ToDateTime();
+                var remain = end > now ? (end - now) : TimeSpan.Zero;
+
+                if (remain > TimeSpan.Zero)
+                {
+                    Debug.Log($"Cooldown: {remain:mm\\:ss} kaldı");
+                    yield break; 
+                }
+            }
+        }
+
         _isSpinning = true;
         _spinButton.interactable = false;
-        StartCoroutine(SpinFlow());
+        yield return StartCoroutine(SpinFlow());
     }
+
 
     IEnumerator SpinFlow()
     {

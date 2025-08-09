@@ -13,6 +13,7 @@ public sealed class FirebaseServices : SingletonBehaviour<FirebaseServices>
     public string UserId { get; private set; }
     public bool OnlineMode { get; private set; } = false;
     public event System.Action<OnlineState, string> OnlineStateChanged;
+    public event System.Action<string> UserIDChanged;
 
     void SetState(OnlineState s, string message = null)
     {
@@ -39,6 +40,8 @@ public sealed class FirebaseServices : SingletonBehaviour<FirebaseServices>
             SpinService = new SpinRewardService(WalletRepo, CooldownPolicy);
 
             UserId = await AuthService.SignInAnonymouslyAsync();
+            UserIDChanged?.Invoke(UserId);
+
             await WalletRepo.EnsureUserAsync(UserId);
             SetState(OnlineState.Online);
         }
