@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "508916673698",
+    "project_id": "spinthewheel-ufukmentes",
+    "storage_bucket": "spinthewheel-ufukmentes.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:508916673698:android:3872c89432e0cee901bbfb",
+        "android_client_info": {
+          "package_name": "com.UfukMentes.SpinTheWheel"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCFbctREyMRsBsGp9pFBuuCAUFwsc1Q1r0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
