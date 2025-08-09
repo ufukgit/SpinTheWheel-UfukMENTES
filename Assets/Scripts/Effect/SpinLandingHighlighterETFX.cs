@@ -15,15 +15,28 @@ public class SpinLandingHighlighterETFX : MonoBehaviour
     [SerializeField] float _centerScale = 1.8f;    
     [SerializeField] float _centerHold = 0.35f;    
 
-    void OnEnable() { if (_spin != null) _spin.SpinLanded += OnSpinLanded; }
-    void OnDisable() { if (_spin != null) _spin.SpinLanded -= OnSpinLanded; }
+    void OnEnable() 
+    { 
+        if (_spin != null) 
+            _spin.SpinLanded += OnSpinLanded; 
+    }
+
+    void OnDisable() 
+    { 
+        if (_spin != null) 
+            _spin.SpinLanded -= OnSpinLanded; 
+    }
 
     void OnSpinLanded(int index)
     {
-        if (_segmentAnchors == null || _segmentAnchors.Length == 0) return;
+        if (_segmentAnchors == null || _segmentAnchors.Length == 0) 
+            return;
+
         index = Mathf.Clamp(index, 0, _segmentAnchors.Length - 1);
+
         var anchor = _segmentAnchors[index];
-        if (anchor == null) return;
+        if (anchor == null) 
+            return;
 
         StartCoroutine(Pulse(anchor));
     }
@@ -47,7 +60,6 @@ public class SpinLandingHighlighterETFX : MonoBehaviour
 
     IEnumerator SimplePulse(RectTransform target, Vector3 baseScale)
     {
-        // Out
         float t = 0f;
         while (t < _pulseTime)
         {
@@ -56,7 +68,6 @@ public class SpinLandingHighlighterETFX : MonoBehaviour
             target.localScale = Vector3.Lerp(baseScale, baseScale * _pulseScale, k);
             yield return null;
         }
-        // Back
         t = 0f;
         while (t < _pulseTime)
         {

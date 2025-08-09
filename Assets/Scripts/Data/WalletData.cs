@@ -2,6 +2,8 @@ using Firebase.Firestore;
 using System;
 using System.Collections.Generic;
 
+public enum RewardCurrency { Money, Gem }
+
 [FirestoreData]
 public class WalletData
 {

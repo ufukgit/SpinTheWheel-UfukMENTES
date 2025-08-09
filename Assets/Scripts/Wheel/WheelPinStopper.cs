@@ -1,14 +1,19 @@
 ﻿using UnityEngine;
 
 [RequireComponent(typeof(RectTransform))]
-public class PointerFollower : MonoBehaviour
+public class WheelPinStopper : MonoBehaviour
 {
-    public RectTransform wheelTransform;
+    [SerializeField] 
+    RectTransform _wheelTransform;
 
-    public float springStrength = 80f;
-    public float damping = 8f;
-    public float impulseStrength = 0.02f;
-    public float maxSwingAngle = 45f;
+    [SerializeField]
+    float _springStrength = 80f;
+    [SerializeField]
+    float _damping = 8f;
+    [SerializeField]
+    float _impulseStrength = 0.02f;
+    [SerializeField]
+    float _maxSwingAngle = 45f;
 
     public int segmentCount = 8;
 
@@ -19,13 +24,14 @@ public class PointerFollower : MonoBehaviour
 
     void Start()
     {
-        _prevFrameAngle = wheelTransform.eulerAngles.z;
+        _prevFrameAngle = _wheelTransform.eulerAngles.z;
         _prevUnwrappedAngle = _prevFrameAngle;
     }
+
     void Update()
     {
         float dt = Time.deltaTime;
-        float currFrameAngle = wheelTransform.eulerAngles.z;
+        float currFrameAngle = _wheelTransform.eulerAngles.z;
         float delta = Mathf.DeltaAngle(_prevFrameAngle, currFrameAngle);
         float currUnwrapped = _prevUnwrappedAngle + delta;
         float segmentSize = 360f / segmentCount;
@@ -34,13 +40,13 @@ public class PointerFollower : MonoBehaviour
         if (currIndex != prevIndex)
         {
             float wheelSpeed = delta / dt;
-            _velocity += Mathf.Abs(wheelSpeed) * impulseStrength;
+            _velocity += Mathf.Abs(wheelSpeed) * _impulseStrength;
         }
 
         float target = -currFrameAngle;
         float diff = Mathf.DeltaAngle(_angle, target);
-        float springForce = diff * springStrength;
-        float dampForce = -_velocity * damping;
+        float springForce = diff * _springStrength;
+        float dampForce = -_velocity * _damping;
 
         _velocity += (springForce + dampForce) * dt;
         _angle += _velocity * dt;
@@ -50,9 +56,9 @@ public class PointerFollower : MonoBehaviour
             _angle = 0f;
             _velocity = -_velocity * 0.5f;
         }
-        else if (_angle < -maxSwingAngle)
+        else if (_angle < -_maxSwingAngle)
         {
-            _angle = -maxSwingAngle;
+            _angle = -_maxSwingAngle;
             _velocity = -_velocity * 0.5f;
         }
 

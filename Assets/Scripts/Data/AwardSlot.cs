@@ -18,10 +18,3 @@ public class AwardSlot : MonoBehaviour
         return Amount.ToString();
     }
 }
-
-public enum RewardCurrency { Money, Gem }
-
-public static class RewardCurrencyUtil
-{
-    public static string Key(RewardCurrency c) => c.ToString(); // "Money", "Gem", ...
-}
