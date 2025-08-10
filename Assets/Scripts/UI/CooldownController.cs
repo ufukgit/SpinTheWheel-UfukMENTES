@@ -20,7 +20,10 @@ public class CooldownController : MonoBehaviour
     private void Start()
     {
         if (FirebaseServices.Instance != null)
+        {
+            FirebaseServices.Instance.OnlineStateChanged += HandleState;
             FirebaseServices.Instance.UserIDChanged += HandleUserID;
+        }
 
         if (_spinManager != null)
         {
@@ -34,7 +37,10 @@ public class CooldownController : MonoBehaviour
     void OnDestroy()
     {
         if (FirebaseServices.Instance != null)
+        {
+            FirebaseServices.Instance.OnlineStateChanged -= HandleState;
             FirebaseServices.Instance.UserIDChanged -= HandleUserID;
+        }
 
         if (_spinManager != null)
         {
@@ -43,6 +49,14 @@ public class CooldownController : MonoBehaviour
         }
 
         StopAllCoroutines();
+    }
+
+    private void HandleState(OnlineState state, string arg2)
+    {
+        if (state != OnlineState.Online && FirebaseServices.Instance.Retrying && _coolDownObject != null)
+        {
+            _coolDownObject.SetActive(false);
+        }
     }
 
     void OnSpinStarted()
@@ -108,7 +122,7 @@ public class CooldownController : MonoBehaviour
 
     void ApplyUI()
     {
-        bool enableButton = _lastAvailable && !_spinning;
+        bool enableButton = _lastAvailable && !_spinning && FirebaseServices.Instance.OnlineMode;
 
         if (_countdownText) _countdownText.text = _lastAvailable ? "" : _lastMsg;
 

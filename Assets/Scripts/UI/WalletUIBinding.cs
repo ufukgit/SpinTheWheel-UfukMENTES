@@ -25,6 +25,11 @@ public class WalletUIBinding : MonoBehaviour
         {
             _firebaseServices.UserIDChanged += OnUserIdChanged;
         }
+
+        if (!_firebaseServices.OnlineMode)
+        {
+            gameObject.SetActive(false);
+        }
     }
 
     void OnDestroy()
@@ -39,6 +44,11 @@ public class WalletUIBinding : MonoBehaviour
 
     void OnUserIdChanged(string uid)
     {
+        if (!gameObject.activeInHierarchy)
+        {
+            gameObject.SetActive(true);
+        }
+
         if (_firebaseServices.SpinService != null)
             _firebaseServices.SpinService.RewardApplied += OnRewardApplied;
 

@@ -1,5 +1,5 @@
+using System;
 using System.Threading.Tasks;
-using UnityEditor.VersionControl;
 using UnityEngine;
 
 public enum OnlineState { Connecting, Online, Offline, Error }
@@ -12,8 +12,14 @@ public sealed class FirebaseServices : SingletonBehaviour<FirebaseServices>
     public SpinRewardService SpinService { get; private set; }
     public string UserId { get; private set; }
     public bool OnlineMode { get; private set; } = false;
+
     public event System.Action<OnlineState, string> OnlineStateChanged;
     public event System.Action<string> UserIDChanged;
+
+    const int MaxAttempts = 5;
+    const float MaxBackoffSec = 30f;
+    bool _retrying;
+    public bool Retrying => _retrying;
 
     void SetState(OnlineState s, string message = null)
     {
@@ -23,17 +29,63 @@ public sealed class FirebaseServices : SingletonBehaviour<FirebaseServices>
 
     async void Start()
     {
-        SetState(OnlineState.Connecting, "Connecting…");
+        await InitWithRetryAsync();
+    }
 
-        var ok = await FirebaseBootstrap.Instance.InitializeAsync();
-        if (!ok)
+    public async void RetryNow()
+    {
+        if (_retrying) return;
+        await InitWithRetryAsync(startImmediate: true);
+    }
+
+    async Task InitWithRetryAsync(bool startImmediate = false)
+    {
+        if (_retrying) return;
+        _retrying = true;
+
+        float backoff = startImmediate ? 0f : 1f;
+
+        for (int attempt = 1; attempt <= MaxAttempts; attempt++)
         {
-            SetState(OnlineState.Offline, $"Online features are not ready");
-            return;
+            if (Application.internetReachability == NetworkReachability.NotReachable)
+            {
+                SetState(OnlineState.Offline, "No internet");
+                await Task.Delay(1000);
+                attempt--; 
+                continue;
+            }
+
+            SetState(OnlineState.Connecting, attempt == 1 ? "Connecting…" : "Reconnecting…");
+
+            var ok = await TryInitOnceAsync();
+            if (ok)
+            {
+                _retrying = false;
+                return;
+            }
+
+            if (attempt < MaxAttempts)
+            {
+                SetState(OnlineState.Offline, $"Retrying… ({attempt}/{MaxAttempts})");
+                await Task.Delay(TimeSpan.FromSeconds(backoff));
+                backoff = Mathf.Min(backoff <= 0f ? 1f : backoff * 2f, MaxBackoffSec);
+            }
         }
 
+        SetState(OnlineState.Error, $"Online services failed after {MaxAttempts} attempts.");
+        _retrying = false;
+    }
+
+    async Task<bool> TryInitOnceAsync()
+    {
         try
         {
+            var ok = await FirebaseBootstrap.Instance.InitializeAsync();
+            if (!ok)
+            {
+                return false;
+            }
+
             AuthService = new FirebaseAuthService(FirebaseBootstrap.Instance.Auth);
             WalletRepo = new FirebaseWalletRepository(FirebaseBootstrap.Instance.Db);
             CooldownPolicy = new ResetEveryTenLinearCooldown();
@@ -43,12 +95,14 @@ public sealed class FirebaseServices : SingletonBehaviour<FirebaseServices>
             UserIDChanged?.Invoke(UserId);
 
             await WalletRepo.EnsureUserAsync(UserId);
-            SetState(OnlineState.Online);
+
+            SetState(OnlineState.Online, null);
+            return true;
         }
-        catch (System.Exception e)
+        catch (Exception e)
         {
-            Debug.LogError(e);
-            SetState(OnlineState.Error, "Online services failed to start. Please try again.");
+            Debug.LogWarning($"[FirebaseServices] Init failed: {e.Message}");
+            return false;
         }
     }
 }

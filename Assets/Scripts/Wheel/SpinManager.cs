@@ -39,6 +39,11 @@ public class SpinManager : MonoBehaviour
 
     void Awake()
     {
+        if (_spinButton)
+        {
+            _spinButton.interactable = false;
+        }
+
         _random = (_randomProviderBehaviour as IRandomIndexProvider) ?? new RandomNumberApiProvider();
         _anim = (_wheelAnimatorBehaviour as IWheelAnimator) ?? new WheelAnimator();
         _rewardApplier = new FirebaseRewardApplier();
