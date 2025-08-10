@@ -27,4 +27,7 @@
 
 **4. Risk)** Kullanıcının spin sırasında bağlantıyı kesme durumu.
 
-- Sorun :
+- Sorun : Kullanıcı spin yaptıktan sonra çarkın yavaşlamasından ötürü alacağı ödülü görüp ve beğenmediği gibi durumlarda uygulamayı kapatıp veya internet bağlantısını kesip tekrar uygulamaya girerek yeni bir spin hakkı elde edebilir.
+          Uygulamamda bu açığı kapattığımı düşünüyorum. 3.Riskte yapılan işlemler bu riski de çözecektir.
+
+- Öneri : Uyguladığım çözüm yerine yine *Server-Otoriter* yöntemi uygulanabilirdi. Kullanıcı uygulamada Spin yaptığı anda "spin başladı" durumunu veritabanında cooldown başlatarak daha garanti çözüm uygulanabilir. Bu sayede kullanıcı oyunu tekrar açsa bile cooldown olduğu için spin hakkı verilmeyecek.
