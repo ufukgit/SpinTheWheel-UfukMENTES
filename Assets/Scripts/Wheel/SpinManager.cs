@@ -33,6 +33,8 @@ public class SpinManager : MonoBehaviour
     int _targetIndex;
 
     public event Action<int> SpinLanded;
+    public event Action SpinStarted;
+    public event Action SpinFinished;
 
     void Awake()
     {
@@ -88,6 +90,7 @@ public class SpinManager : MonoBehaviour
 
         _isSpinning = true;
         _spinButton.interactable = false;
+        SpinStarted?.Invoke();
         yield return StartCoroutine(SpinFlow());
     }
 
@@ -120,15 +123,23 @@ public class SpinManager : MonoBehaviour
                 var applyTask = _rewardApplier.ApplyAsync(user, slot.CurrencyKey, slot.Amount, _targetIndex);
                 yield return CoroutineTasks.Wait(applyTask);
                 Debug.Log($"Won: {slot.GetDisplayText()} {slot.CurrencyKey}");
+
+                yield return new WaitForSeconds(3f);    
+                FinishSpin();
+                yield break;
             }
         }
 
-        FinishSpin();
+        if (!FirebaseServices.Instance.OnlineMode)
+        {
+            FinishSpin();
+        }
     }
 
     void FinishSpin()
     {
         _isSpinning = false;
         _spinButton.interactable = true;
+        SpinFinished?.Invoke();
     }
 }

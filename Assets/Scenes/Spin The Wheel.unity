@@ -2610,7 +2610,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 5}
+  m_AnchoredPosition: {x: 0, y: -1.7}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1224056100
@@ -3099,6 +3099,7 @@ MonoBehaviour:
   _countdownText: {fileID: 1497060777}
   _spinButtonLabel: {fileID: 1940088792}
   _coolDownObject: {fileID: 1284317294}
+  _spinManager: {fileID: 1550175923}
 --- !u!1 &1382459073
 GameObject:
   m_ObjectHideFlags: 0
@@ -5366,6 +5367,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1967594642}
+  - component: {fileID: 1967594643}
   m_Layer: 5
   m_Name: WheelPin
   m_TagString: Untagged
@@ -5391,9 +5393,32 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 46.6}
+  m_AnchoredPosition: {x: 0, y: 55.3}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1967594643
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1967594641}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bf921274e4f45b147b65c4cc5947253b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  wheel: {fileID: 29435727}
+  segmentCount: 8
+  notchOffsetDeg: 0
+  maxSwing: 42
+  spring: 60
+  damping: 12
+  baseImpulse: 180
+  impulsePerDegSpeed: 0.25
+  contactWindow: 8
+  contactPress: 120
+  restitution: 0.35
 --- !u!1 &1987036527
 GameObject:
   m_ObjectHideFlags: 0
@@ -5405,7 +5430,6 @@ GameObject:
   - component: {fileID: 1987036528}
   - component: {fileID: 1987036530}
   - component: {fileID: 1987036529}
-  - component: {fileID: 1987036531}
   m_Layer: 5
   m_Name: WheelPinFlap
   m_TagString: Untagged
@@ -5429,7 +5453,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 0.000015258789}
+  m_AnchoredPosition: {x: 0, y: -6.6999846}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1987036529
@@ -5470,24 +5494,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1987036527}
   m_CullTransparentMesh: 1
---- !u!114 &1987036531
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1987036527}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: bf921274e4f45b147b65c4cc5947253b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _wheelTransform: {fileID: 29435727}
-  _springStrength: 80
-  _damping: 8
-  _impulseStrength: 0.02
-  _maxSwingAngle: 45
-  segmentCount: 8
 --- !u!1 &1988952413
 GameObject:
   m_ObjectHideFlags: 0

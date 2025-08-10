@@ -10,13 +10,23 @@ public class CooldownController : MonoBehaviour
     [SerializeField] TMP_Text _countdownText;
     [SerializeField] TMP_Text _spinButtonLabel;
     [SerializeField] GameObject _coolDownObject;
+    [SerializeField] SpinManager _spinManager;
 
     string _uid;
+    bool _spinning;
+    bool _lastAvailable;
+    string _lastMsg = "";
 
     private void Start()
     {
         if (FirebaseServices.Instance != null)
             FirebaseServices.Instance.UserIDChanged += HandleUserID;
+
+        if (_spinManager != null)
+        {
+            _spinManager.SpinStarted += OnSpinStarted;
+            _spinManager.SpinFinished += OnSpinFinished;
+        }
 
         StartCoroutine(RefreshLoop());
     }
@@ -25,6 +35,24 @@ public class CooldownController : MonoBehaviour
     {
         if (FirebaseServices.Instance != null)
             FirebaseServices.Instance.UserIDChanged -= HandleUserID;
+
+        if (_spinManager != null)
+        {
+            _spinManager.SpinStarted -= OnSpinStarted;
+            _spinManager.SpinFinished -= OnSpinFinished;
+        }
+
+        StopAllCoroutines();
+    }
+
+    void OnSpinStarted()
+    {
+        _spinning = true; ApplyUI();
+    }
+
+    void OnSpinFinished()
+    {
+        _spinning = false; ApplyUI();
     }
 
     private void HandleUserID(string strID)
@@ -45,14 +73,15 @@ public class CooldownController : MonoBehaviour
     {
         if (!(FirebaseServices.Instance && FirebaseServices.Instance.OnlineMode) || string.IsNullOrEmpty(_uid))
         {
-            SetUI(available: true, msg: "");
+            SetLogic(available: true, msg: "");
             yield break;
         }
 
         var task = FirebaseServices.Instance.WalletRepo.GetAsync(_uid);
         yield return CoroutineTasks.Wait(task);
         var data = task.Result;
-        if (data == null) { SetUI(true, ""); yield break; }
+
+        if (data == null) { SetLogic(true, ""); yield break; }
 
         var now = DateTime.UtcNow;
         var end = data.CooldownEndTime.ToDateTime();
@@ -61,38 +90,42 @@ public class CooldownController : MonoBehaviour
         if (remain <= TimeSpan.Zero)
         {
             _coolDownObject.SetActive(false);
-            SetUI(true, "");
+            SetLogic(true, "");
         }
         else
         {
             _coolDownObject.SetActive(true);
-            SetUI(false, $"{remain:mm\\:ss}");
+            SetLogic(false, $"{remain:mm\\:ss}");
         }
     }
 
-    void SetUI(bool available, string msg)
+    void SetLogic(bool available, string msg)
     {
-        if (_countdownText)
-            _countdownText.text = available ? "" : msg;
+        _lastAvailable = available;
+        _lastMsg = msg;
+        ApplyUI();
+    }
 
-        Color white = Color.white;
-        Color labelDisabled = ParseHex("8C8C8C");
-        Color buttonDisabled = ParseHex("3F3F3F");
+    void ApplyUI()
+    {
+        bool enableButton = _lastAvailable && !_spinning;
+
+        if (_countdownText) _countdownText.text = _lastAvailable ? "" : _lastMsg;
 
         if (_spinButtonLabel)
-            _spinButtonLabel.color = available ? white : labelDisabled;
+            _spinButtonLabel.color = enableButton ? Color.white : ParseHex("8C8C8C");
 
         if (_spinButton && _spinButton.image)
-            _spinButton.image.color = available ? white : buttonDisabled;
+            _spinButton.image.color = enableButton ? Color.white : ParseHex("3F3F3F");
 
         if (_spinButton)
         {
             var cb = _spinButton.colors;
-            cb.normalColor = white;
-            cb.disabledColor = white;
+            cb.normalColor = Color.white;
+            cb.disabledColor = Color.white;
             _spinButton.colors = cb;
 
-            _spinButton.interactable = available;
+            _spinButton.interactable = enableButton;
         }
     }
 
