@@ -62,7 +62,21 @@ public class SpinManager : MonoBehaviour
     void OnSpinButton()
     {
         if (_isSpinning) return;
+
         StartCoroutine(OnSpinButtonRoutine());
+    }
+
+    private string CreateSpinIdToPrefs()
+    {
+        var spinId = Guid.NewGuid().ToString("N");
+        var pending = new PendingSpin
+        {
+            SpinId = spinId,
+            Stage = PendingStage.Created
+        };
+        PendingSpinStore.Save(pending);
+
+        return spinId;
     }
 
     IEnumerator OnSpinButtonRoutine()
@@ -94,14 +108,25 @@ public class SpinManager : MonoBehaviour
             }
         }
 
+        var spinId = CreateSpinIdToPrefs();
+
         _isSpinning = true;
         _spinButton.interactable = false;
         SpinStarted?.Invoke();
-        yield return StartCoroutine(SpinFlow());
+
+        try
+        {
+            yield return StartCoroutine(SpinFlow(spinId));
+        }
+        finally
+        {
+            _isSpinning = false;
+            SpinFinished?.Invoke();
+        }
     }
 
 
-    IEnumerator SpinFlow()
+    IEnumerator SpinFlow(string spinId)
     {
         _currentSpeed = _spinSpeed;
         var forever = _anim.SpinForever(this, _wheelTransform, () => _currentSpeed);
@@ -123,17 +148,36 @@ public class SpinManager : MonoBehaviour
         var slot = _rewards.GetSlotByIndex(_targetIndex);
         if (slot != null && FirebaseServices.Instance)
         {
+            var decided = new PendingSpin
+            {
+                SpinId = spinId,
+                CurrencyKey = slot.CurrencyKey,  
+                AmountUnits = slot.Amount,        
+                Index = _targetIndex,
+                Stage = PendingStage.Decided
+            };
+            PendingSpinStore.Save(decided);
+
             var user = FirebaseServices.Instance.UserId;
             if (!string.IsNullOrEmpty(user))
             {
                 RewardWon?.Invoke();
 
-                var applyTask = _rewardApplier.ApplyAsync(user, slot.CurrencyKey, slot.Amount, _targetIndex);
+                var applyTask = _rewardApplier.ApplyAsync(user, decided.CurrencyKey, decided.AmountUnits, decided.Index, decided.SpinId);
                 yield return CoroutineTasks.Wait(applyTask);
                 Debug.Log($"Won: {slot.GetDisplayText()} {slot.CurrencyKey}");
 
-                yield return new WaitForSeconds(3f);    
-                FinishSpin();
+                if (applyTask.IsFaulted)
+                {
+                    Debug.LogWarning("Reward apply failed; pending kept for recovery.");
+                    yield break;
+                }
+
+                PendingSpinStore.Clear();
+
+                yield return new WaitForSeconds(3f);
+                _isSpinning = false;
+                SpinFinished?.Invoke(); 
                 yield break;
             }
         }

@@ -25,6 +25,12 @@ public class CooldownController : MonoBehaviour
             FirebaseServices.Instance.UserIDChanged += HandleUserID;
         }
 
+        if (PendingSpinRecoverer.Instance != null)
+        {
+            PendingSpinRecoverer.Instance.RecoveryStarted += OnRecStart;
+            PendingSpinRecoverer.Instance.RecoveryFinished += OnRecFinish;
+        }
+
         if (_spinManager != null)
         {
             _spinManager.SpinStarted += OnSpinStarted;
@@ -42,6 +48,12 @@ public class CooldownController : MonoBehaviour
             FirebaseServices.Instance.UserIDChanged -= HandleUserID;
         }
 
+        if (PendingSpinRecoverer.Instance != null)
+        {
+            PendingSpinRecoverer.Instance.RecoveryStarted -= OnRecStart;
+            PendingSpinRecoverer.Instance.RecoveryFinished -= OnRecFinish;
+        }
+
         if (_spinManager != null)
         {
             _spinManager.SpinStarted -= OnSpinStarted;
@@ -49,6 +61,17 @@ public class CooldownController : MonoBehaviour
         }
 
         StopAllCoroutines();
+    }
+
+    void OnRecStart()
+    {
+        _lastAvailable = false;          
+        ApplyUI();
+    }
+
+    void OnRecFinish(bool ok)
+    {
+        StartCoroutine(RefreshOnce());
     }
 
     private void HandleState(OnlineState state, string arg2)
@@ -122,7 +145,16 @@ public class CooldownController : MonoBehaviour
 
     void ApplyUI()
     {
-        bool enableButton = _lastAvailable && !_spinning && FirebaseServices.Instance.OnlineMode;
+        var svc = FirebaseServices.Instance;
+
+        bool hasPending = PendingSpinStore.TryLoad(out var p);
+        bool recovering = PendingSpinRecoverer.Instance.IsRecovering;
+        bool online = svc != null && svc.OnlineMode;
+        bool enableButton = _lastAvailable
+                            && !_spinning
+                            && online
+                            && !hasPending
+                            && !recovering;
 
         if (_countdownText) _countdownText.text = _lastAvailable ? "" : _lastMsg;
 
@@ -142,6 +174,7 @@ public class CooldownController : MonoBehaviour
             _spinButton.interactable = enableButton;
         }
     }
+
 
     static Color ParseHex(string hex)
     {

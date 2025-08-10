@@ -14,9 +14,8 @@ public sealed class SpinRewardService
         _policy = policy;
     }
 
-    public Task GrantAsync(string uid, string currencyKey, long amountUnits, int landedIndex)
+    public Task GrantAsync(string uid, string currencyKey, long amountUnits, int landedIndex, string spinId)
     {
-        var spinId = Guid.NewGuid().ToString("N");
         RewardApplied?.Invoke(uid, currencyKey, amountUnits);
         return _repo.ApplyRewardAsync(uid, currencyKey, amountUnits, landedIndex, _policy, spinId);
     }
