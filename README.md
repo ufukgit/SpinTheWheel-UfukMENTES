@@ -31,3 +31,9 @@
           Uygulamamda bu açığı kapattığımı düşünüyorum. 3.Riskte yapılan işlemler bu riski de çözecektir.
 
 - Öneri : Uyguladığım çözüm yerine yine *Server-Otoriter* yöntemi uygulanabilirdi. Kullanıcı uygulamada Spin yaptığı anda "spin başladı" durumunu veritabanında cooldown başlatarak daha garanti çözüm uygulanabilir. Bu sayede kullanıcı oyunu tekrar açsa bile cooldown olduğu için spin hakkı verilmeyecek.
+
+**5. Risk)** Data corruption / race conddition durumu.
+- Sorun : Kullanıcı, spin butonuna art arda defalarca tıklayarak spamlayabilir, aynı hesaptan farklı cihazdan aynı anda spin butonuna basabilir ya da kötü internet sebebiyle aynı işlemi tekrar gönderebilir.
+          Uygulamamda kısmen bu durumu engelleiyorum. Idempotency ile butona defalarca kez basıp spamlama durumunu ve kötü internet yüzünden tekrar aynı işlemin yapılmasını engelliyorum. 
+		  Farklı cihazdan aynı hesapla aynı anda spin yapma işlemi için sunucu tarafında cooldown kontrolü veya yönetimi olmadığı için bu şekilde manipüle edilebilir.
+- Öneri : Server-Otoriter yapı kurulduğu taktirde yani spin akışını server yönettiği taktirde iki cihazdan aynı anda istek gelse bile transaction'da sadece birisi başarılı olur.
