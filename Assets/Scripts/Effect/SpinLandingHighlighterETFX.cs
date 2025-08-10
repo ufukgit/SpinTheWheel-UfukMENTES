@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -6,36 +6,37 @@ public class SpinLandingHighlighterETFX : MonoBehaviour
 {
     [SerializeField] SpinManager _spin;
     [SerializeField] RectTransform[] _segmentAnchors;
+    [SerializeField] DOTweenEffect _fx;
 
     [SerializeField] float _pulseScale = 1.25f;
     [SerializeField] float _pulseTime = 0.30f;
-    [SerializeField] int _pulseCount = 3;    
+    [SerializeField] int _pulseCount = 3;
 
-    [SerializeField] RectTransform _overlayLayer;  
-    [SerializeField] float _centerScale = 1.8f;    
-    [SerializeField] float _centerHold = 0.35f;    
+    [SerializeField] RectTransform _overlayLayer;
+    [SerializeField] float _centerScale = 1.8f;
+    [SerializeField] float _centerHold = 0.35f;
 
-    void OnEnable() 
-    { 
-        if (_spin != null) 
-            _spin.SpinLanded += OnSpinLanded; 
+    void OnEnable()
+    {
+        if (_spin != null)
+            _spin.SpinLanded += OnSpinLanded;
     }
 
-    void OnDisable() 
-    { 
-        if (_spin != null) 
-            _spin.SpinLanded -= OnSpinLanded; 
+    void OnDisable()
+    {
+        if (_spin != null)
+            _spin.SpinLanded -= OnSpinLanded;
     }
 
     void OnSpinLanded(int index)
     {
-        if (_segmentAnchors == null || _segmentAnchors.Length == 0) 
+        if (_segmentAnchors == null || _segmentAnchors.Length == 0)
             return;
 
         index = Mathf.Clamp(index, 0, _segmentAnchors.Length - 1);
 
         var anchor = _segmentAnchors[index];
-        if (anchor == null) 
+        if (anchor == null)
             return;
 
         StartCoroutine(Pulse(anchor));
@@ -50,12 +51,34 @@ public class SpinLandingHighlighterETFX : MonoBehaviour
             bool isLast = (i == _pulseCount - 1) && _overlayLayer != null;
 
             if (isLast)
+            {
                 yield return StartCoroutine(MoveToCenterPulseAndBack(target, baseScale));
+            }
             else
+            {
                 yield return StartCoroutine(SimplePulse(target, baseScale));
+            }
         }
 
         target.localScale = baseScale;
+    }
+
+    private void PlayDOTweenEffect(RectTransform target)
+    {
+        var overlayCanvas = _overlayLayer ? _overlayLayer.GetComponentInParent<Canvas>() : null;
+        Camera cam = (overlayCanvas && overlayCanvas.renderMode != RenderMode.ScreenSpaceOverlay)
+                     ? overlayCanvas.worldCamera : null;
+
+        RectTransformUtility.ScreenPointToLocalPointInRectangle(
+            _overlayLayer,
+            new Vector2(Screen.width * 0.5f, Screen.height * 0.5f),
+            cam,
+            out var centerLocal
+        );
+
+        var targetImage = target.GetComponent<Image>();
+        if (_fx != null && targetImage != null)
+            _fx.Play(centerLocal, targetImage);
     }
 
     IEnumerator SimplePulse(RectTransform target, Vector3 baseScale)
@@ -105,6 +128,8 @@ public class SpinLandingHighlighterETFX : MonoBehaviour
 
         target.SetParent(_overlayLayer, worldPositionStays: false);
         target.anchoredPosition = fromLocal;
+
+        PlayDOTweenEffect(target);
 
         float moveTime = _pulseTime * 0.8f;
 

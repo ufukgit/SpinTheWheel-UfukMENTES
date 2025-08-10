@@ -35,6 +35,7 @@ public class SpinManager : MonoBehaviour
     public event Action<int> SpinLanded;
     public event Action SpinStarted;
     public event Action SpinFinished;
+    public event Action RewardWon;
 
     void Awake()
     {
@@ -120,6 +121,8 @@ public class SpinManager : MonoBehaviour
             var user = FirebaseServices.Instance.UserId;
             if (!string.IsNullOrEmpty(user))
             {
+                RewardWon?.Invoke();
+
                 var applyTask = _rewardApplier.ApplyAsync(user, slot.CurrencyKey, slot.Amount, _targetIndex);
                 yield return CoroutineTasks.Wait(applyTask);
                 Debug.Log($"Won: {slot.GetDisplayText()} {slot.CurrencyKey}");
