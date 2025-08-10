@@ -1,4 +1,4 @@
-# SpinTheWheel-UfukMENTES
+# Edge Cases & Prevention
 
 **1. Risk)** Random numara üreten API'nin manipülasyonu.
 
@@ -22,5 +22,9 @@
   - Sorun : Kullanıcı, spin sonucunu gördüğü esnada sonuç veritabanına yazılmadan oyunu kapatırsa ya da interneti keserse ve tekrar oyuna girerek aynı spinle daha büyük ödül alabilir
 			      Uygulamamda bu açığı büyük oranda kapattığımı düşünüyorum. Kullanıcı her spin işlemini yaptığında benzersiz bir spinId oluşturarak veritabanında sakladığım ledger koleksiyonuna ekledim.
             Yeni bir spin işleminde aynı spinId ledger koleksiyonumda varsa ödülü dağıtmadan ve veritabanına yazmadan işlemi sonlandırıyorum. Böylece ikinci kez ödül verilmiyor. Oyun tekrar açıldığında Spin butonu interactable değil, buton interactable olup yeni bir spin               işleminde yeni bir benzersiz spinId oluşacağı için ikinci kez ödül verilmemektedir. (*Idempotency*)
-    
-  - Öneri : SpinId veritabanına yazılmadan uygulama kapatılırsa/internet kesilirse veya başka bir açık oluştuğu durum için : Spin butonuna basıldığı anda direkt olarak spinId üretilmiyor. Bunun yerine direkt olarak benzersiz bir spinId üreterek, örneğin PlayerPrefs                     içerisinde saklanarak güvenlik arttırılabilir.        
+    SpinId veritabanına yazılmadan uygulama kapatılırsa/internet kesilirse veya başka bir açık oluştuğu durumda; Spin butonuna basıldığı anda direkt olarak benzersiz bir spinId üretiliyor. Üretilen spinId PlayerPrefs                     içerisinde saklanıyor. Ödül veritabanına yazılmadan uygulama kapatılıp açılırsa PlayerPrefs içerisinde bir spinId olduğu için ilgili spinId ile veritabanına ödüller 0 olacak şekilde veritabanına yazılıyor ve cooldown devreye giriyor. (Veritabanına yazma işleminden sonra PlayerPrefs temizleniyor.)  
+  - Öneri :     
+
+**4. Risk)** Kullanıcının spin sırasında bağlantıyı kesme durumu.
+
+- Sorun :
